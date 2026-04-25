@@ -11,7 +11,7 @@ use axum::{
 use rig::providers::anthropic;
 use tower_http::cors::CorsLayer;
 
-use crate::schema::{MappingResult, QueryError, QueryRequest, QueryResponse, RouteMetadata};
+use crate::schema::{QueryError, QueryRequest, QueryResponse, RouteMatch, RouteMetadata};
 
 const MODEL: &str = "claude-sonnet-4-6";
 
@@ -59,73 +59,54 @@ async fn query_handler(
 
     let client = anthropic::ClientBuilder::new(&state.api_key).build();
     let extractor = client
-        .extractor::<MappingResult>(MODEL)
+        .extractor::<RouteMatch>(MODEL)
         .preamble(
-            "You are a semantic API routing agent. Given a list of API routes and a client's \
-             natural language query with their provided parameters, identify the best matching \
-             route and produce a parameter mapping.\n\n\
+            "You are a semantic API routing agent. Given a numbered list of API routes and a \
+             natural language query, identify the index of the single best matching route.\n\n\
              Output fields:\n\
              - matched_route_index: integer index of the best matching route\n\
-             - instructions: explain how the client's params map to the API's params, \
-               call out any missing required params or needed transformations\n\
-             - path_params: object with values for path placeholders (e.g. {\"id\": 5}), \
-               or null if none\n\
-             - query_params: object with populated query params, or null if none\n\
-             - body: object with the request body fields, or null if the route has no body\n\n\
-             Use JSON null (not an empty object) when a params field is unused.",
+             - error: if no route is a reasonable match for the query, set this to a brief \
+               plain-text explanation. Otherwise null.",
         )
         .build();
 
     let prompt = format!(
-        "Route index:\n{route_index}\n\nFull route details:\n{routes_json}\n\n\
-         Client query: \"{}\"\nClient parameters: {}",
+        "Route index:\n{}\n\nFull route details:\n{}\n\n\
+         Client query: \"{}\"",
+        route_index,
+        routes_json,
         req.query,
-        serde_json::to_string_pretty(&req.parameters).unwrap_or_else(|_| "{}".to_string()),
     );
 
-    let mapping = extractor
+    let route_match = extractor
         .extract(&prompt)
         .await
         .map_err(|e| server_err(e.to_string()))?;
 
     let matched_route = state
         .routes
-        .get(mapping.matched_route_index)
+        .get(route_match.matched_route_index)
         .ok_or_else(|| {
             server_err(format!(
                 "Claude returned out-of-bounds route index {}",
-                mapping.matched_route_index
+                route_match.matched_route_index
             ))
         })?
         .clone();
 
-    let resolved_path = resolve_path(&matched_route.path, &mapping.path_params);
-    let expected_response_shape = matched_route.response.shape.clone();
-
     Ok(Json(QueryResponse {
-        matched_route,
-        resolved_path,
-        expected_response_shape,
-        parameter_mapping: mapping,
+        method: matched_route.method,
+        path: matched_route.path,
+        semantic: matched_route.semantic,
+        path_params: matched_route.parameters.path,
+        query_params: matched_route.parameters.query,
+        body_shape: matched_route.parameters.body,
+        response_shape: matched_route.response.shape,
+        errors: matched_route.errors,
+        error: route_match.error,
     }))
 }
 
-/// Substitute path placeholder values into a path template.
-/// e.g. resolve_path("/tasks/{id}", {"id": 5}) => "/tasks/5"
-fn resolve_path(template: &str, path_params: &serde_json::Value) -> String {
-    let mut resolved = template.to_string();
-    if let Some(obj) = path_params.as_object() {
-        for (key, val) in obj {
-            let placeholder = format!("{{{key}}}");
-            let value = match val {
-                serde_json::Value::String(s) => s.clone(),
-                other => other.to_string(),
-            };
-            resolved = resolved.replace(&placeholder, &value);
-        }
-    }
-    resolved
-}
 
 fn server_err(msg: String) -> (StatusCode, Json<QueryError>) {
     (

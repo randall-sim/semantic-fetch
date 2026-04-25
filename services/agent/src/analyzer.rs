@@ -21,12 +21,20 @@ pub async fn analyze_repo(path: &str, api_key: &str) -> Result<Vec<RouteMetadata
              - semantic: clear natural-language description of what the route does\n\
              - parameters.path: path parameters extracted from {placeholder} segments\n\
              - parameters.query: query string parameters read via r.URL.Query()\n\
-             - parameters.body: fields decoded from the JSON request body\n\
+             - parameters.body: a JSON shape object representing the decoded request body, \
+               where every key is a field name and every leaf value is a type name \
+               (\"string\", \"number\", \"boolean\"); use an array with one representative \
+               element for array fields (e.g. [\"string\"] or [{\"id\": \"number\"}]); \
+               use null if the route reads no request body\n\
              - response.status: HTTP success status code\n\
              - response.shape: JSON structure where leaf values are type names \
                (\"string\", \"number\", \"boolean\"); arrays use one representative element\n\
-             - errors: all error responses with status code and plain-text message\n\n\
-             If a field list is empty, return an empty array. Be thorough and precise.",
+             - errors: all error responses; for each provide:\n\
+                 * status: HTTP error status code\n\
+                 * message: typical plain-text reason phrase (e.g. \"not found\")\n\
+                 * body: JSON shape of the error response body using type-name leaf values \
+                   (e.g. {\"error\": \"string\"} or {\"code\": \"number\", \"message\": \"string\"})\n\n\
+             If a parameter list is empty, return an empty array. Be thorough and precise.",
         )
         .build();
 
