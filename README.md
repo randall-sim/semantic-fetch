@@ -32,3 +32,16 @@ nl-api-wrapper/
 │   └── agent/         # The Core AI Proxy & Schema Generator
 └── packages/
     └── client/          # The Frontend TypeScript Library & CLI
+```
+
+## Running Agent
+
+Step 1: analyze once, writes routes.json
+  
+``target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend``
+
+Step 2: serve reads routes.json directly (no re-analysis)
+
+``target/debug/agent serve``
+
+``target/debug/agent serve --routes routes.json --port 3001``
