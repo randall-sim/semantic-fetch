@@ -1,0 +1,139 @@
+[
+  {
+    "method": "GET",
+    "path": "/tasks",
+    "semantic": "Retrieve a list of all tasks",
+    "parameters": {
+      "path": [],
+      "query": [],
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "shape": {
+        "tasks": [
+          {
+            "id": "number",
+            "status": "string",
+            "title": "string"
+          }
+        ]
+      }
+    },
+    "errors": []
+  },
+  {
+    "method": "POST",
+    "path": "/tasks",
+    "semantic": "Create a new task from the provided JSON payload",
+    "parameters": {
+      "path": [],
+      "query": [],
+      "body": {
+        "status": "string",
+        "title": "string"
+      }
+    },
+    "response": {
+      "status": 201,
+      "shape": {
+        "task": {
+          "id": "number",
+          "status": "string",
+          "title": "string"
+        }
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "message": "Invalid request payload",
+        "body": {
+          "error": "string"
+        }
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/tasks/{id}",
+    "semantic": "Retrieve a single task by its ID",
+    "parameters": {
+      "path": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": true,
+          "description": "The unique numeric identifier of the task",
+          "default_value": null
+        }
+      ],
+      "query": [],
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "shape": {
+        "task": {
+          "id": "number",
+          "status": "string",
+          "title": "string"
+        }
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "message": "Invalid task ID",
+        "body": {
+          "error": "string"
+        }
+      },
+      {
+        "status": 404,
+        "message": "Task not found",
+        "body": {
+          "error": "string"
+        }
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/tasks/{id}",
+    "semantic": "Delete a task by its ID",
+    "parameters": {
+      "path": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": true,
+          "description": "The unique numeric identifier of the task to delete",
+          "default_value": null
+        }
+      ],
+      "query": [],
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "shape": null
+    },
+    "errors": [
+      {
+        "status": 400,
+        "message": "Invalid task ID",
+        "body": {
+          "error": "string"
+        }
+      },
+      {
+        "status": 404,
+        "message": "Task not found",
+        "body": {
+          "error": "string"
+        }
+      }
+    ]
+  }
+]

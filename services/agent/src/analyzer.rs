@@ -1,4 +1,5 @@
 use anyhow::Result;
+use rig::client::CompletionClient;
 use rig::providers::anthropic;
 use walkdir::WalkDir;
 
@@ -9,7 +10,7 @@ const MODEL: &str = "claude-sonnet-4-6";
 pub async fn analyze_repo(path: &str, api_key: &str) -> Result<Vec<RouteMetadata>> {
     let source = collect_go_sources(path)?;
 
-    let client = anthropic::ClientBuilder::new(api_key).build();
+    let client = anthropic::Client::new(api_key)?;
     let extractor = client
         .extractor::<RouteList>(MODEL)
         .preamble(

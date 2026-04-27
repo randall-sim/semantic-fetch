@@ -36,12 +36,24 @@ nl-api-wrapper/
 
 ## Running Agent
 
-Step 1: analyze once, writes routes.json
-  
-``target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend``
+**Step 1:** Analyze the Go backend once and write `routes.json`:
 
-Step 2: serve reads routes.json directly (no re-analysis)
+```bash
+target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend
+```
 
-``target/debug/agent serve``
+**Step 2:** Start the query server (reads `routes.json`, no re-analysis):
 
-``target/debug/agent serve --routes routes.json --port 3001``
+```bash
+target/debug/agent serve --api-key $ANTHROPIC_API_KEY
+# or explicitly:
+target/debug/agent serve --api-key $ANTHROPIC_API_KEY --routes routes.json --port 3001
+```
+
+The server holds the API key and uses it for every incoming query. Clients send only their natural language query — no API key required in the request:
+
+```bash
+curl -X POST http://localhost:3001/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "get all tasks"}'
+```

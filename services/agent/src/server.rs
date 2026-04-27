@@ -8,6 +8,7 @@ use axum::{
     routing::post,
     Router,
 };
+use rig::client::CompletionClient;
 use rig::providers::anthropic;
 use tower_http::cors::CorsLayer;
 
@@ -45,6 +46,7 @@ async fn query_handler(
     State(state): State<AppState>,
     Json(req): Json<QueryRequest>,
 ) -> Result<Json<QueryResponse>, (StatusCode, Json<QueryError>)> {
+    let api_key = &state.api_key;
     // Build a compact index so Claude can reference routes by number.
     let index_lines: Vec<String> = state
         .routes
@@ -57,7 +59,7 @@ async fn query_handler(
     let routes_json =
         serde_json::to_string_pretty(&*state.routes).map_err(|e| server_err(e.to_string()))?;
 
-    let client = anthropic::ClientBuilder::new(&state.api_key).build();
+    let client = anthropic::Client::new(api_key).map_err(|e| server_err(e.to_string()))?;
     let extractor = client
         .extractor::<RouteMatch>(MODEL)
         .preamble(
