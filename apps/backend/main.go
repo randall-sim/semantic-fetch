@@ -6,17 +6,24 @@ import (
 )
 
 func main() {
+	initDB()
+	defer db.Close()
+
 	mux := http.NewServeMux()
 
-	// These handler functions are defined in tasks.go
-	// Because they share the "main" package, main.go knows they exist!
-	mux.HandleFunc("GET /tasks", getTasksHandler)
-	mux.HandleFunc("POST /tasks", createTaskHandler)
-	mux.HandleFunc("GET /tasks/{id}", getSingleTaskHandler)
-	mux.HandleFunc("DELETE /tasks/{id}", deleteTaskHandler)
+	// Public auth routes
+	mux.HandleFunc("POST /auth/register", registerHandler)
+	mux.HandleFunc("POST /auth/login", loginHandler)
+
+	// Protected task routes — all require a valid JWT
+	mux.Handle("GET /tasks", jwtMiddleware(http.HandlerFunc(getTasksHandler)))
+	mux.Handle("POST /tasks", jwtMiddleware(http.HandlerFunc(createTaskHandler)))
+	mux.Handle("GET /tasks/{id}", jwtMiddleware(http.HandlerFunc(getSingleTaskHandler)))
+	mux.Handle("PUT /tasks/{id}", jwtMiddleware(http.HandlerFunc(updateTaskHandler)))
+	mux.Handle("DELETE /tasks/{id}", jwtMiddleware(http.HandlerFunc(deleteTaskHandler)))
 
 	fmt.Println("Server is running on port 8080...")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", corsMiddleware(mux)); err != nil {
 		fmt.Printf("Error starting server: %s\n", err)
 	}
 }

@@ -102,6 +102,7 @@ async fn query_handler(
         semantic: matched_route.semantic,
         path_params: matched_route.parameters.path,
         query_params: matched_route.parameters.query,
+        headers: matched_route.parameters.headers,
         body_shape: matched_route.parameters.body,
         response_shape: matched_route.response.shape,
         errors: matched_route.errors,

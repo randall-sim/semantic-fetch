@@ -4,121 +4,169 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"sync"
 )
 
-// Task and DB variables
 type Task struct {
-	ID     int    `json:"id"`
-	Title  string `json:"title"`
-	Status string `json:"status"`
+	ID        int    `json:"id"`
+	UserID    int    `json:"user_id"`
+	Title     string `json:"title"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"created_at"`
 }
 
-var (
-	tasks  = make(map[int]Task)
-	nextID = 1
-	mu     sync.Mutex
-)
-
-// --- Handlers ---
-
-// getTasksHandler returns all tasks
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
-	mu.Lock()
-	defer mu.Unlock()
+	userID := r.Context().Value(userIDKey).(int)
 
-	taskList := make([]Task, 0, len(tasks))
-	for _, task := range tasks {
-		taskList = append(taskList, task)
+	rows, err := db.Query(
+		"SELECT id, user_id, title, status, created_at FROM tasks WHERE user_id = ? ORDER BY id",
+		userID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to fetch tasks", http.StatusInternalServerError)
+		return
 	}
+	defer rows.Close()
 
-	response := struct {
-		"tasks": []Task
-	}{
-		"tasks": taskList,
+	taskList := []Task{}
+	for rows.Next() {
+		var t Task
+		if err := rows.Scan(&t.ID, &t.UserID, &t.Title, &t.Status, &t.CreatedAt); err != nil {
+			http.Error(w, "Failed to read tasks", http.StatusInternalServerError)
+			return
+		}
+		taskList = append(taskList, t)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]any{"tasks": taskList})
 }
 
-// createTaskHandler accepts JSON to create a new task
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var newTask Task
-	
-	// Decode the request body into our struct
-	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	userID := r.Context().Value(userIDKey).(int)
+
+	var body struct {
+		Title  string `json:"title"`
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if body.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+	if body.Status == "" {
+		body.Status = "pending"
+	}
+
+	result, err := db.Exec(
+		"INSERT INTO tasks (user_id, title, status) VALUES (?, ?, ?)",
+		userID, body.Title, body.Status,
+	)
+	if err != nil {
+		http.Error(w, "Failed to create task", http.StatusInternalServerError)
 		return
 	}
 
-	mu.Lock()
-	newTask.ID = nextID
-	nextID++
-	// Default status if none provided
-	if newTask.Status == "" {
-		newTask.Status = "pending"
-	}
-	tasks[newTask.ID] = newTask
-	mu.Unlock()
-
-	response := struct {
-		"task": Task
-	}{
-		"task": newTask,
-	}
+	id, _ := result.LastInsertId()
+	var task Task
+	db.QueryRow(
+		"SELECT id, user_id, title, status, created_at FROM tasks WHERE id = ?", id,
+	).Scan(&task.ID, &task.UserID, &task.Title, &task.Status, &task.CreatedAt)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]any{"task": task})
 }
 
-// getSingleTaskHandler fetches a single task by its path variable ID
 func getSingleTaskHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract the {id} wildcard from the path
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+	userID := r.Context().Value(userIDKey).(int)
+
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
-	mu.Lock()
-	task, exists := tasks[id]
-	mu.Unlock()
-
-	if !exists {
+	var task Task
+	err = db.QueryRow(
+		"SELECT id, user_id, title, status, created_at FROM tasks WHERE id = ? AND user_id = ?",
+		id, userID,
+	).Scan(&task.ID, &task.UserID, &task.Title, &task.Status, &task.CreatedAt)
+	if err != nil {
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
-	}
-
-	response := struct {
-		"task": Task
-	}{
-		"task": task,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]any{"task": task})
 }
 
-// deleteTaskHandler removes a task by ID
-func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDKey).(int)
+
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
+	var body struct {
+		Title  string `json:"title"`
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-	if _, exists := tasks[id]; !exists {
+	result, err := db.Exec(`
+		UPDATE tasks
+		SET title  = COALESCE(NULLIF(?, ''), title),
+		    status = COALESCE(NULLIF(?, ''), status)
+		WHERE id = ? AND user_id = ?
+	`, body.Title, body.Status, id, userID)
+	if err != nil {
+		http.Error(w, "Failed to update task", http.StatusInternalServerError)
+		return
+	}
+
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
 		http.Error(w, "Task not found", http.StatusNotFound)
 		return
 	}
 
-	delete(tasks, id)
-	w.WriteHeader(http.StatusNoContent) // 204 No Content for successful deletion
+	var task Task
+	db.QueryRow(
+		"SELECT id, user_id, title, status, created_at FROM tasks WHERE id = ?", id,
+	).Scan(&task.ID, &task.UserID, &task.Title, &task.Status, &task.CreatedAt)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"task": task})
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDKey).(int)
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	result, err := db.Exec("DELETE FROM tasks WHERE id = ? AND user_id = ?", id, userID)
+	if err != nil {
+		http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		return
+	}
+
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		http.Error(w, "Task not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

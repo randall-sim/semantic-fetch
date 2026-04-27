@@ -15,6 +15,8 @@ pub struct RouteMetadata {
 pub struct Parameters {
     pub path: Vec<ParameterDef>,
     pub query: Vec<ParameterDef>,
+    /// HTTP request headers the route reads or requires (e.g. Authorization, X-Custom-Header).
+    pub headers: Vec<ParameterDef>,
     /// JSON structure where leaf values are type names ("string", "number", "boolean");
     /// arrays use one representative element. Null if the route has no request body.
     pub body: serde_json::Value,
@@ -78,6 +80,8 @@ pub struct QueryResponse {
     /// Ordered list of path parameters as they appear in the path template.
     pub path_params: Vec<ParameterDef>,
     pub query_params: Vec<ParameterDef>,
+    /// HTTP request headers the route reads or requires.
+    pub headers: Vec<ParameterDef>,
     /// JSON shape of the request body; null if the route takes no body.
     pub body_shape: serde_json::Value,
     pub response_shape: serde_json::Value,

@@ -1,11 +1,100 @@
 [
   {
-    "method": "GET",
-    "path": "/tasks",
-    "semantic": "Retrieve a list of all tasks",
+    "method": "POST",
+    "path": "/auth/register",
+    "semantic": "Register a new user account with email and password",
     "parameters": {
       "path": [],
       "query": [],
+      "headers": [],
+      "body": {
+        "email": "string",
+        "password": "string"
+      }
+    },
+    "response": {
+      "status": 201,
+      "shape": {
+        "email": "string",
+        "id": "number"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "message": "Invalid request body",
+        "body": "string"
+      },
+      {
+        "status": 400,
+        "message": "Email and password are required",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Internal server error",
+        "body": "string"
+      },
+      {
+        "status": 409,
+        "message": "Email already in use",
+        "body": "string"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login",
+    "semantic": "Authenticate an existing user with email and password, returning a signed JWT",
+    "parameters": {
+      "path": [],
+      "query": [],
+      "headers": [],
+      "body": {
+        "email": "string",
+        "password": "string"
+      }
+    },
+    "response": {
+      "status": 200,
+      "shape": {
+        "token": "string"
+      }
+    },
+    "errors": [
+      {
+        "status": 400,
+        "message": "Invalid request body",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid credentials",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Internal server error",
+        "body": "string"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/tasks",
+    "semantic": "Retrieve all tasks belonging to the authenticated user",
+    "parameters": {
+      "path": [],
+      "query": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "type": "string",
+          "required": true,
+          "description": "Bearer JWT token required for authentication",
+          "default_value": null
+        }
+      ],
       "body": null
     },
     "response": {
@@ -13,22 +102,59 @@
       "shape": {
         "tasks": [
           {
+            "created_at": "string",
             "id": "number",
             "status": "string",
-            "title": "string"
+            "title": "string",
+            "user_id": "number"
           }
         ]
       }
     },
-    "errors": []
+    "errors": [
+      {
+        "status": 401,
+        "message": "Missing or invalid Authorization header",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid or expired token",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid token claims",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Failed to fetch tasks",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Failed to read tasks",
+        "body": "string"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/tasks",
-    "semantic": "Create a new task from the provided JSON payload",
+    "semantic": "Create a new task for the authenticated user",
     "parameters": {
       "path": [],
       "query": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "type": "string",
+          "required": true,
+          "description": "Bearer JWT token required for authentication",
+          "default_value": null
+        }
+      ],
       "body": {
         "status": "string",
         "title": "string"
@@ -38,101 +164,252 @@
       "status": 201,
       "shape": {
         "task": {
+          "created_at": "string",
           "id": "number",
           "status": "string",
-          "title": "string"
+          "title": "string",
+          "user_id": "number"
         }
       }
     },
     "errors": [
       {
+        "status": 401,
+        "message": "Missing or invalid Authorization header",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid or expired token",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid token claims",
+        "body": "string"
+      },
+      {
         "status": 400,
-        "message": "Invalid request payload",
-        "body": {
-          "error": "string"
-        }
+        "message": "Invalid request body",
+        "body": "string"
+      },
+      {
+        "status": 400,
+        "message": "Title is required",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Failed to create task",
+        "body": "string"
       }
     ]
   },
   {
     "method": "GET",
     "path": "/tasks/{id}",
-    "semantic": "Retrieve a single task by its ID",
+    "semantic": "Retrieve a single task by ID belonging to the authenticated user",
     "parameters": {
       "path": [
         {
           "name": "id",
-          "type": "integer",
+          "type": "number",
           "required": true,
-          "description": "The unique numeric identifier of the task",
+          "description": "The unique identifier of the task",
           "default_value": null
         }
       ],
       "query": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "type": "string",
+          "required": true,
+          "description": "Bearer JWT token required for authentication",
+          "default_value": null
+        }
+      ],
       "body": null
     },
     "response": {
       "status": 200,
       "shape": {
         "task": {
+          "created_at": "string",
           "id": "number",
           "status": "string",
-          "title": "string"
+          "title": "string",
+          "user_id": "number"
         }
       }
     },
     "errors": [
       {
+        "status": 401,
+        "message": "Missing or invalid Authorization header",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid or expired token",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid token claims",
+        "body": "string"
+      },
+      {
         "status": 400,
         "message": "Invalid task ID",
-        "body": {
-          "error": "string"
-        }
+        "body": "string"
       },
       {
         "status": 404,
         "message": "Task not found",
-        "body": {
-          "error": "string"
+        "body": "string"
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/tasks/{id}",
+    "semantic": "Update the title and/or status of a task belonging to the authenticated user",
+    "parameters": {
+      "path": [
+        {
+          "name": "id",
+          "type": "number",
+          "required": true,
+          "description": "The unique identifier of the task",
+          "default_value": null
         }
+      ],
+      "query": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "type": "string",
+          "required": true,
+          "description": "Bearer JWT token required for authentication",
+          "default_value": null
+        }
+      ],
+      "body": {
+        "status": "string",
+        "title": "string"
+      }
+    },
+    "response": {
+      "status": 200,
+      "shape": {
+        "task": {
+          "created_at": "string",
+          "id": "number",
+          "status": "string",
+          "title": "string",
+          "user_id": "number"
+        }
+      }
+    },
+    "errors": [
+      {
+        "status": 401,
+        "message": "Missing or invalid Authorization header",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid or expired token",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid token claims",
+        "body": "string"
+      },
+      {
+        "status": 400,
+        "message": "Invalid task ID",
+        "body": "string"
+      },
+      {
+        "status": 400,
+        "message": "Invalid request body",
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Failed to update task",
+        "body": "string"
+      },
+      {
+        "status": 404,
+        "message": "Task not found",
+        "body": "string"
       }
     ]
   },
   {
     "method": "DELETE",
     "path": "/tasks/{id}",
-    "semantic": "Delete a task by its ID",
+    "semantic": "Delete a task by ID belonging to the authenticated user",
     "parameters": {
       "path": [
         {
           "name": "id",
-          "type": "integer",
+          "type": "number",
           "required": true,
-          "description": "The unique numeric identifier of the task to delete",
+          "description": "The unique identifier of the task",
           "default_value": null
         }
       ],
       "query": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "type": "string",
+          "required": true,
+          "description": "Bearer JWT token required for authentication",
+          "default_value": null
+        }
+      ],
       "body": null
     },
     "response": {
       "status": 204,
-      "shape": null
+      "shape": {}
     },
     "errors": [
       {
+        "status": 401,
+        "message": "Missing or invalid Authorization header",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid or expired token",
+        "body": "string"
+      },
+      {
+        "status": 401,
+        "message": "Invalid token claims",
+        "body": "string"
+      },
+      {
         "status": 400,
         "message": "Invalid task ID",
-        "body": {
-          "error": "string"
-        }
+        "body": "string"
+      },
+      {
+        "status": 500,
+        "message": "Failed to delete task",
+        "body": "string"
       },
       {
         "status": 404,
         "message": "Task not found",
-        "body": {
-          "error": "string"
-        }
+        "body": "string"
       }
     ]
   }

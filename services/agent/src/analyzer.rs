@@ -22,6 +22,11 @@ pub async fn analyze_repo(path: &str, api_key: &str) -> Result<Vec<RouteMetadata
              - semantic: clear natural-language description of what the route does\n\
              - parameters.path: path parameters extracted from {placeholder} segments\n\
              - parameters.query: query string parameters read via r.URL.Query()\n\
+             - parameters.headers: HTTP request headers the route reads or requires \
+               (look for r.Header.Get calls, Authorization checks, middleware that reads \
+               specific headers, etc.); each entry has the same shape as a ParameterDef \
+               (name, type \"string\", required, description, default_value); \
+               return an empty array if the route reads no custom or auth headers\n\
              - parameters.body: a JSON shape object representing the decoded request body, \
                where every key is a field name and every leaf value is a type name \
                (\"string\", \"number\", \"boolean\"); use an array with one representative \
