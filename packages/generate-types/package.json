@@ -1,0 +1,26 @@
+{
+  "name": "generate-types",
+  "version": "0.1.0",
+  "description": "CLI tool: generate TypeScript types from a running agent-client server",
+  "main": "dist/cli.js",
+  "bin": {
+    "generate-types": "bin/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "clean": "rm -rf dist"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "dependencies": {
+    "agent-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "pnpm@10.15.0"
+}

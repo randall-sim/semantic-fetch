@@ -5,7 +5,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::Json,
-    routing::post,
+    routing::{get, post},
     Router,
 };
 use rig::client::CompletionClient;
@@ -30,6 +30,7 @@ pub async fn serve(routes: Vec<RouteMetadata>, port: u16, api_key: String) -> Re
 
     let app = Router::new()
         .route("/query", post(query_handler))
+        .route("/routes", get(routes_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
@@ -110,6 +111,10 @@ async fn query_handler(
     }))
 }
 
+
+async fn routes_handler(State(state): State<AppState>) -> Json<Vec<RouteMetadata>> {
+    Json((*state.routes).clone())
+}
 
 fn server_err(msg: String) -> (StatusCode, Json<QueryError>) {
     (
