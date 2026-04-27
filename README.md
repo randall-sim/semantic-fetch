@@ -48,15 +48,15 @@ cargo build
 **Step 1:** Analyze the Go backend once and write `routes.json`:
 
 ```bash
-services/agent/target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend
+target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend
 ```
 
 **Step 2:** Start the query server (reads `routes.json`, no re-analysis):
 
 ```bash
-services/agent/target/debug/agent serve --api-key $ANTHROPIC_API_KEY
+target/debug/agent serve --api-key $ANTHROPIC_API_KEY
 # or explicitly:
-services/agent/target/debug/agent serve --api-key $ANTHROPIC_API_KEY --routes routes.json --port 3001
+target/debug/agent serve --api-key $ANTHROPIC_API_KEY --routes routes.json --port 3001
 ```
 
 The server holds the API key and uses it for every incoming query. Clients send only their natural language query — no API key required in the request:
