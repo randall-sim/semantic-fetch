@@ -36,18 +36,27 @@ nl-api-wrapper/
 
 ## Running Agent
 
+**Prerequisites:** [Rust](https://rustup.rs) (edition 2024, stable toolchain)
+
+**Build:**
+
+```bash
+cd services/agent
+cargo build
+```
+
 **Step 1:** Analyze the Go backend once and write `routes.json`:
 
 ```bash
-target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend
+services/agent/target/debug/agent analyze --api-key $ANTHROPIC_API_KEY --path ../../apps/backend
 ```
 
 **Step 2:** Start the query server (reads `routes.json`, no re-analysis):
 
 ```bash
-target/debug/agent serve --api-key $ANTHROPIC_API_KEY
+services/agent/target/debug/agent serve --api-key $ANTHROPIC_API_KEY
 # or explicitly:
-target/debug/agent serve --api-key $ANTHROPIC_API_KEY --routes routes.json --port 3001
+services/agent/target/debug/agent serve --api-key $ANTHROPIC_API_KEY --routes routes.json --port 3001
 ```
 
 The server holds the API key and uses it for every incoming query. Clients send only their natural language query — no API key required in the request:
