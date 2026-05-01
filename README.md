@@ -143,7 +143,7 @@ cd packages/generate-types && pnpm build
 ```bash
 # Start the Rust agent first (see "Running Agent" above), then:
 cd apps/frontend
-npx generate-types \
+node ../../packages/generate-types/src/cli.ts \
   --agent-url http://localhost:3001 \
   --src     ./src \
   --out     ./src/lib

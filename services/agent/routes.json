@@ -31,13 +31,13 @@
         "body": "string"
       },
       {
-        "status": 500,
-        "message": "Internal server error",
+        "status": 409,
+        "message": "Email already in use",
         "body": "string"
       },
       {
-        "status": 409,
-        "message": "Email already in use",
+        "status": 500,
+        "message": "Internal server error",
         "body": "string"
       }
     ]
@@ -45,7 +45,7 @@
   {
     "method": "POST",
     "path": "/auth/login",
-    "semantic": "Authenticate an existing user with email and password, returning a signed JWT",
+    "semantic": "Authenticate a user with email and password and return a JWT token",
     "parameters": {
       "path": [],
       "query": [],
@@ -91,7 +91,7 @@
           "name": "Authorization",
           "type": "string",
           "required": true,
-          "description": "Bearer JWT token required for authentication",
+          "description": "Bearer JWT token for authentication",
           "default_value": null
         }
       ],
@@ -123,11 +123,6 @@
         "body": "string"
       },
       {
-        "status": 401,
-        "message": "Invalid token claims",
-        "body": "string"
-      },
-      {
         "status": 500,
         "message": "Failed to fetch tasks",
         "body": "string"
@@ -151,7 +146,7 @@
           "name": "Authorization",
           "type": "string",
           "required": true,
-          "description": "Bearer JWT token required for authentication",
+          "description": "Bearer JWT token for authentication",
           "default_value": null
         }
       ],
@@ -184,11 +179,6 @@
         "body": "string"
       },
       {
-        "status": 401,
-        "message": "Invalid token claims",
-        "body": "string"
-      },
-      {
         "status": 400,
         "message": "Invalid request body",
         "body": "string"
@@ -208,7 +198,7 @@
   {
     "method": "GET",
     "path": "/tasks/{id}",
-    "semantic": "Retrieve a single task by ID belonging to the authenticated user",
+    "semantic": "Retrieve a single task by ID for the authenticated user",
     "parameters": {
       "path": [
         {
@@ -225,7 +215,7 @@
           "name": "Authorization",
           "type": "string",
           "required": true,
-          "description": "Bearer JWT token required for authentication",
+          "description": "Bearer JWT token for authentication",
           "default_value": null
         }
       ],
@@ -255,11 +245,6 @@
         "body": "string"
       },
       {
-        "status": 401,
-        "message": "Invalid token claims",
-        "body": "string"
-      },
-      {
         "status": 400,
         "message": "Invalid task ID",
         "body": "string"
@@ -274,7 +259,7 @@
   {
     "method": "PUT",
     "path": "/tasks/{id}",
-    "semantic": "Update the title and/or status of a task belonging to the authenticated user",
+    "semantic": "Update the title and/or status of an existing task belonging to the authenticated user",
     "parameters": {
       "path": [
         {
@@ -291,7 +276,7 @@
           "name": "Authorization",
           "type": "string",
           "required": true,
-          "description": "Bearer JWT token required for authentication",
+          "description": "Bearer JWT token for authentication",
           "default_value": null
         }
       ],
@@ -324,11 +309,6 @@
         "body": "string"
       },
       {
-        "status": 401,
-        "message": "Invalid token claims",
-        "body": "string"
-      },
-      {
         "status": 400,
         "message": "Invalid task ID",
         "body": "string"
@@ -339,13 +319,13 @@
         "body": "string"
       },
       {
-        "status": 500,
-        "message": "Failed to update task",
+        "status": 404,
+        "message": "Task not found",
         "body": "string"
       },
       {
-        "status": 404,
-        "message": "Task not found",
+        "status": 500,
+        "message": "Failed to update task",
         "body": "string"
       }
     ]
@@ -370,7 +350,7 @@
           "name": "Authorization",
           "type": "string",
           "required": true,
-          "description": "Bearer JWT token required for authentication",
+          "description": "Bearer JWT token for authentication",
           "default_value": null
         }
       ],
@@ -392,23 +372,18 @@
         "body": "string"
       },
       {
-        "status": 401,
-        "message": "Invalid token claims",
-        "body": "string"
-      },
-      {
         "status": 400,
         "message": "Invalid task ID",
         "body": "string"
       },
       {
-        "status": 500,
-        "message": "Failed to delete task",
+        "status": 404,
+        "message": "Task not found",
         "body": "string"
       },
       {
-        "status": 404,
-        "message": "Task not found",
+        "status": 500,
+        "message": "Failed to delete task",
         "body": "string"
       }
     ]
