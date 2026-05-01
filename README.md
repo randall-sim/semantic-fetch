@@ -1,5 +1,9 @@
 # 🧠 Semantic API Wrapper
 
+[FINAL PROJECT VIDEO](https://drive.google.com/file/d/1GS6QAmG7LQnUafy5AB3Cw8AlKCqcmZWU/view?usp=sharing)
+
+[FINAL PROJECT WRITEUP](./RandySim_CS1680_FinalWriteUp.pdf)
+
 A next-generation AI API wrapper that converts strict backend endpoints into a resilient, Natural Language API. 
 
 By placing an LLM-powered Rust agent between your frontend and backend, frontend developers can request data using natural language (`"Get the 10 latest tasks"`), while the backend remains a standard, highly-optimized REST API.
