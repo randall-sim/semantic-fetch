@@ -1,12 +1,8 @@
-# 🧠 Semantic API Wrapper
+# semantic-fetch
 
-[FINAL PROJECT VIDEO](https://drive.google.com/file/d/1GS6QAmG7LQnUafy5AB3Cw8AlKCqcmZWU/view?usp=sharing)
+AI API wrapper that converts strict backend endpoints into a resilient, Natural Language API. 
 
-[FINAL PROJECT WRITEUP](./RandySim_CS1680_FinalWriteUp.pdf)
-
-A next-generation AI API wrapper that converts strict backend endpoints into a resilient, Natural Language API. 
-
-By placing an LLM-powered Rust agent between your frontend and backend, frontend developers can request data using natural language (`"Get the 10 latest tasks"`), while the backend remains a standard, highly-optimized REST API.
+By placing a LLM-powered Rust agent between your frontend and backend, frontend developers can request data using natural language (`"Get the 10 latest tasks"`), while the backend remains a standard, highly-optimized REST API.
 
 **Key Benefits:**
 * **No More Breaking Changes:** Backend API updates no longer break frontend clients. The LLM bridges the semantic gap and routes requests to the updated endpoints.
@@ -15,7 +11,7 @@ By placing an LLM-powered Rust agent between your frontend and backend, frontend
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 This repository is a polyglot monorepo containing three main components:
 
@@ -25,7 +21,7 @@ This repository is a polyglot monorepo containing three main components:
 
 ---
 
-## 📂 Repository Structure
+## Repo Structure
 
 ```text
 nl-api-wrapper/
@@ -73,7 +69,7 @@ curl -X POST http://localhost:3001/query \
 
 ---
 
-## 📦 Frontend Library (`packages/client`)
+## Frontend Library (`packages/client`)
 
 The `agent-client` npm package lets any TypeScript frontend make API calls using natural language. Add it to your project via the pnpm workspace:
 
@@ -124,7 +120,7 @@ const data = await agent.call('Create a task', {
 
 ---
 
-## 🛠️ CLI Tool (`packages/generate-types`)
+## CLI Tool (`packages/generate-types`)
 
 The CLI is the bridge between dev time and runtime. It:
 1. Scans your source files for every `agent.call("...")` call
